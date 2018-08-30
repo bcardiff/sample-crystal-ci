@@ -14,7 +14,7 @@ dry:
 
   wait_for_db: &wait_for_db
     name: Wait for MySQL
-    command: sleep 5
+    command: sleep 7
 
 jobs:
   test:
