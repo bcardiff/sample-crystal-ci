@@ -19,7 +19,8 @@ dry:
 jobs:
   test:
     docker:
-      - image: crystallang/crystal:0.26.1
+      # Use crystallang/crystal:latest or specific crystallang/crystal:VERSION
+      - image: crystallang/crystal:latest
         environment:
           SHARDS_CACHE_PATH: ./shards-cache
       - image: mysql:5.7
