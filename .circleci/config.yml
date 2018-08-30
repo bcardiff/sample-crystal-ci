@@ -1,0 +1,29 @@
+version: 2
+
+jobs:
+  test:
+    docker:
+      - image: crystallang/crystal:0.26.1
+      - image: mysql:5.7
+        environment:
+          MYSQL_DATABASE: 'sample_app'
+          MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+    steps:
+      - run: crystal --version
+
+      - checkout
+
+      - run: shards
+
+      - run:
+          name: Wait for MySQL
+          command: sleep 5
+
+      - run: crystal spec
+
+workflows:
+  version: 2
+  # Run tests on every single commit
+  ci:
+    jobs:
+      - test
