@@ -4,6 +4,8 @@ jobs:
   test:
     docker:
       - image: crystallang/crystal:0.26.1
+        environment:
+          SHARDS_CACHE_PATH: ./shards-cache
       - image: mysql:5.7
         environment:
           MYSQL_DATABASE: 'sample_app'
@@ -13,7 +15,18 @@ jobs:
 
       - checkout
 
+      - restore_cache:
+          keys:
+            - shards-cache-v1-{{ .Branch }}-{{ checksum "shard.lock" }}
+            - shards-cache-v1-{{ .Branch }}
+            - shards-cache-v1
+
       - run: shards
+
+      - save_cache:
+          key: shards-cache-v1-{{ .Branch }}-{{ checksum "shard.lock" }}
+          paths:
+            - ./shards-cache
 
       - run:
           name: Wait for MySQL
