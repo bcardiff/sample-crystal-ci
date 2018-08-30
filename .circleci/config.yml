@@ -2,12 +2,14 @@ version: 2
 
 dry:
   restore_shards_cache: &restore_shards_cache
+    # Use {{ checksum "shard.yml" }} if developing a shard instead of an app
     keys:
       - shards-cache-v1-{{ .Branch }}-{{ checksum "shard.lock" }}
       - shards-cache-v1-{{ .Branch }}
       - shards-cache-v1
 
   save_shards_cache: &save_shards_cache
+    # Use {{ checksum "shard.yml" }} if developing a shard instead of an app
     key: shards-cache-v1-{{ .Branch }}-{{ checksum "shard.lock" }}
     paths:
       - ./shards-cache
