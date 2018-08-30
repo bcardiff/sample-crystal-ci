@@ -34,9 +34,48 @@ jobs:
 
       - run: crystal spec
 
+  test-on-nightly:
+    docker:
+      - image: crystallang/crystal:nightly
+        environment:
+          SHARDS_CACHE_PATH: ./shards-cache
+      - image: mysql:5.7
+        environment:
+          MYSQL_DATABASE: 'sample_app'
+          MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+    steps:
+      - run: crystal --version
+
+      - checkout
+
+      - restore_cache:
+          keys:
+            - shards-cache-v1-{{ .Branch }}-{{ checksum "shard.lock" }}
+            - shards-cache-v1-{{ .Branch }}
+            - shards-cache-v1
+
+      - run: shards
+
+      - run:
+          name: Wait for MySQL
+          command: sleep 5
+
+      - run: crystal spec
+
 workflows:
   version: 2
   # Run tests on every single commit
   ci:
     jobs:
       - test
+  # Run tests every night using crystal nightly
+  nightly:
+    triggers:
+      - schedule:
+          cron: "0 0 * * *"
+          filters:
+            branches:
+              only:
+                - master
+    jobs:
+      - test-on-nightly
