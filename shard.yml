@@ -1,0 +1,17 @@
+name: sample_app
+version: 0.1.0
+
+authors:
+  - Brian J. Cardiff <bcardiff@gmail.com>
+
+targets:
+  sample_app:
+    main: src/sample_app.cr
+
+dependencies:
+  mysql:
+    github: crystal-lang/crystal-mysql
+
+crystal: 0.26.1
+
+license: MIT
