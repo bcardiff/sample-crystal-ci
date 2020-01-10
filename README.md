@@ -6,11 +6,11 @@ Sample fake app with:
 * In development environment:
   * database service using docker
   * crystal locally installed
-* In CircleCI 2.0 environment:
+* In CircleCI 2.1 environment:
   * database service using docker
   * tagged crystal docker image for ci
   * nightly crystal docker image for cron builds for breaking changes notification even if there is no activity in the repo.
-  * take advantage of CircleCI cache (docker layers and specific folders) to decrease build times
+  * take advantage of `manastech/crystal` orb
 
 ## Development
 
