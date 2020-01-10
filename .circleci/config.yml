@@ -2,7 +2,7 @@ version: 2.1
 
 orbs:
   docker: circleci/docker@0.5.20
-  crystal: manastech/crystal@dev:preview
+  crystal: manastech/crystal@0.2.0
 
 executors:
   crystal_mysql:
