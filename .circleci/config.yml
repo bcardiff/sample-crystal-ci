@@ -46,23 +46,31 @@ commands:
       - run:
           name: Wait for db using Dockerize
           command: dockerize -wait << parameters.host >>:<< parameters.port >> -timeout << parameters.timeout >>
+  crystal_version:
+    description: "Show Crystal and Shards version."
+    steps:
+      - run: |
+          crystal --version
+          shards --version
 
 jobs:
-  test:
+  crystal_test:
+    description: "Run tests with specified Crystal version"
     parameters:
-      executor:
-        type: executor
       spec_options:
         type: string
         default: ""
+      executor:
+        description: The executor to use for this job.
+        type: executor
+        default: crystal/default
     executor: << parameters.executor >>
     steps:
-      - run: crystal --version
+      - crystal_version
       - checkout
       - crystal/cache_restore
       - crystal/shards_install
       - crystal/cache_save
-      - wait_for_db
       - crystal/test:
           spec_options: << parameters.spec_options >>
 
@@ -71,9 +79,11 @@ workflows:
 
   test:
     jobs:
-      - test:
+      - crystal_test:
           name: Test on latest
           executor: crystal_mysql
+          pre-steps:
+            - wait_for_db
 
   # Run tests every night using crystal nightly
   nightly:
@@ -85,8 +95,10 @@ workflows:
               only:
                 - master
     jobs:
-      - test:
+      - crystal_test:
           name: Test on nightly
           executor:
             name: crystal_mysql
             version: nightly
+          pre-steps:
+            - wait_for_db
