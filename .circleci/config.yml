@@ -53,13 +53,13 @@ workflows:
   test:
     jobs:
       - crystal/test:
-          name: Test on latest
+          name: test-on-latest
           executor: crystal_mysql
           pre-steps:
             - wait_for_db
 
       - crystal/test:
-          name: Test on nightly
+          name: test-on-nightly
           executor:
             name: crystal_mysql
             version: nightly
@@ -77,7 +77,7 @@ workflows:
                 - master
     jobs:
       - crystal/test:
-          name: Test on nightly
+          name: test-on-nightly
           executor:
             name: crystal_mysql
             version: nightly
