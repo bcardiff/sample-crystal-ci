@@ -12,6 +12,6 @@ dependencies:
   mysql:
     github: crystal-lang/crystal-mysql
 
-crystal: 0.26.1
+crystal: 0.32.1
 
 license: MIT
