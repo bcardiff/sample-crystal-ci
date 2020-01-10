@@ -2,7 +2,7 @@ version: 2.1
 
 orbs:
   docker: circleci/docker@0.5.20
-  crystal: manastech/crystal@0.1.0
+  crystal: manastech/crystal@dev:preview
 
 executors:
   crystal_mysql:
@@ -46,42 +46,23 @@ commands:
       - run:
           name: Wait for db using Dockerize
           command: dockerize -wait << parameters.host >>:<< parameters.port >> -timeout << parameters.timeout >>
-  crystal_version:
-    description: "Show Crystal and Shards version."
-    steps:
-      - run: |
-          crystal --version
-          shards --version
-
-jobs:
-  crystal_test:
-    description: "Run tests with specified Crystal version"
-    parameters:
-      spec_options:
-        type: string
-        default: ""
-      executor:
-        description: The executor to use for this job.
-        type: executor
-        default: crystal/default
-    executor: << parameters.executor >>
-    steps:
-      - crystal_version
-      - checkout
-      - crystal/cache_restore
-      - crystal/shards_install
-      - crystal/cache_save
-      - crystal/test:
-          spec_options: << parameters.spec_options >>
 
 workflows:
   version: 2
 
   test:
     jobs:
-      - crystal_test:
+      - crystal/test:
           name: Test on latest
           executor: crystal_mysql
+          pre-steps:
+            - wait_for_db
+
+      - crystal/test:
+          name: Test on nightly
+          executor:
+            name: crystal_mysql
+            version: nightly
           pre-steps:
             - wait_for_db
 
@@ -95,7 +76,7 @@ workflows:
               only:
                 - master
     jobs:
-      - crystal_test:
+      - crystal/test:
           name: Test on nightly
           executor:
             name: crystal_mysql
