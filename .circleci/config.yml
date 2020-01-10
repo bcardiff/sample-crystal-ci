@@ -1,74 +1,80 @@
-version: 2
+version: 2.1
 
-dry:
-  restore_shards_cache: &restore_shards_cache
-    # Use {{ checksum "shard.yml" }} if developing a shard instead of an app
-    keys:
-      - shards-cache-v1-{{ .Branch }}-{{ checksum "shard.lock" }}
-      - shards-cache-v1-{{ .Branch }}
-      - shards-cache-v1
+orbs:
+  docker: circleci/docker@0.5.20
+  crystal: manastech/crystal@0.1.0
 
-  save_shards_cache: &save_shards_cache
-    # Use {{ checksum "shard.yml" }} if developing a shard instead of an app
-    key: shards-cache-v1-{{ .Branch }}-{{ checksum "shard.lock" }}
-    paths:
-      - ./shards-cache
+executors:
+  crystal_mysql:
+    parameters:
+      version:
+        type: string
+        default: latest
+    docker:
+      - image: crystallang/crystal:<< parameters.version >>
+        environment:
+          DATABASE_URL: mysql://root@localhost/sample_app
+      - image: mysql:5.7
+        environment:
+          MYSQL_DATABASE: 'sample_app'
+          MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
 
-  wait_for_db: &wait_for_db
-    name: Wait for MySQL
-    command: sleep 7
+commands:
+  install_dockerize:
+    parameters:
+      version:
+        type: string
+        default: v0.6.1
+    steps:
+      - run:
+          name: Install `curl` and `jq` for `docker/install-dockerize` command
+          command: apt-get update && apt-get install -y curl jq
+      - docker/install-dockerize
+  wait_for_db:
+    parameters:
+      timeout:
+        type: string
+        default: 1m
+      host:
+        type: string
+        default: tcp://localhost
+      port:
+        type: integer
+        default: 3306
+    steps:
+      - install_dockerize
+      - run:
+          name: Wait for db using Dockerize
+          command: dockerize -wait << parameters.host >>:<< parameters.port >> -timeout << parameters.timeout >>
 
 jobs:
   test:
-    docker:
-      # Use crystallang/crystal:latest or specific crystallang/crystal:VERSION
-      - image: crystallang/crystal:latest
-        environment:
-          SHARDS_CACHE_PATH: ./shards-cache
-      - image: mysql:5.7
-        environment:
-          MYSQL_DATABASE: 'sample_app'
-          MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+    parameters:
+      executor:
+        type: executor
+      spec_options:
+        type: string
+        default: ""
+    executor: << parameters.executor >>
     steps:
       - run: crystal --version
-
       - checkout
-
-      - restore_cache: *restore_shards_cache
-      - run: shards
-      - save_cache: *save_shards_cache
-
-      - run: *wait_for_db
-
-      - run: crystal spec
-
-  test-on-nightly:
-    docker:
-      - image: crystallang/crystal:nightly
-        environment:
-          SHARDS_CACHE_PATH: ./shards-cache
-      - image: mysql:5.7
-        environment:
-          MYSQL_DATABASE: 'sample_app'
-          MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
-    steps:
-      - run: crystal --version
-
-      - checkout
-
-      - restore_cache: *restore_shards_cache
-      - run: shards
-
-      - run: *wait_for_db
-
-      - run: crystal spec
+      - crystal/cache_restore
+      - crystal/shards_install
+      - crystal/cache_save
+      - wait_for_db
+      - crystal/test:
+          spec_options: << parameters.spec_options >>
 
 workflows:
   version: 2
-  # Run tests on every single commit
-  ci:
+
+  test:
     jobs:
-      - test
+      - test:
+          name: Test on latest
+          executor: crystal_mysql
+
   # Run tests every night using crystal nightly
   nightly:
     triggers:
@@ -79,4 +85,8 @@ workflows:
               only:
                 - master
     jobs:
-      - test-on-nightly
+      - test:
+          name: Test on nightly
+          executor:
+            name: crystal_mysql
+            version: nightly
