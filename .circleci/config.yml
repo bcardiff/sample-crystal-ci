@@ -2,16 +2,16 @@ version: 2.1
 
 orbs:
   docker: circleci/docker@0.5.20
-  crystal: manastech/crystal@0.2.0
+  crystal: manastech/crystal@0.3
 
 executors:
   crystal_mysql:
     parameters:
-      version:
+      tag:
         type: string
         default: latest
     docker:
-      - image: crystallang/crystal:<< parameters.version >>
+      - image: crystallang/crystal:<< parameters.tag >>
         environment:
           DATABASE_URL: mysql://root@localhost/sample_app
       - image: mysql:5.7
@@ -50,10 +50,10 @@ commands:
 workflows:
   version: 2
 
-  test:
+  build:
     jobs:
       - crystal/test:
-          name: test-on-latest
+          name: test
           executor: crystal_mysql
           pre-steps:
             - wait_for_db
@@ -62,7 +62,7 @@ workflows:
           name: test-on-nightly
           executor:
             name: crystal_mysql
-            version: nightly
+            tag: nightly
           pre-steps:
             - wait_for_db
 
@@ -80,6 +80,6 @@ workflows:
           name: test-on-nightly
           executor:
             name: crystal_mysql
-            version: nightly
+            tag: nightly
           pre-steps:
             - wait_for_db
