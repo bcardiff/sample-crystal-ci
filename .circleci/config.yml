@@ -66,6 +66,14 @@ workflows:
           pre-steps:
             - wait_for_db
 
+      - crystal/test:
+          name: test-on-0.32
+          executor:
+            name: crystal_mysql
+            tag: 0.32.0
+          pre-steps:
+            - wait_for_db
+
   # Run tests every night using crystal nightly
   nightly:
     triggers:
